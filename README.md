@@ -16,3 +16,12 @@ Use ERC-721 Non-Fungible Token Standard: <https://eips.ethereum.org/EIPS/eip-721
 1. Basic NFT
 2. Random IPFS NFT
 3. Dynamic SVG NFT
+
+## Openzeppelin Boilerplate
+
+References:
+
+- <https://docs.openzeppelin.com/contracts/2.x/api/token/erc721>
+- <https://docs.openzeppelin.com/contracts/2.x/erc721>
+
+`yarn add --dev @openzeppelin/contracts`
