@@ -1,5 +1,5 @@
-const { deployments, ethers, network } = require('hardhat');
-const { assert, expect } = require('chai');
+const { deployments, ethers } = require('hardhat');
+const { assert } = require('chai');
 
 describe('BasicNft Unit Tests', () => {
   beforeEach(async () => {
