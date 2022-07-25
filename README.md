@@ -25,3 +25,15 @@ References:
 - <https://docs.openzeppelin.com/contracts/2.x/erc721>
 
 `yarn add --dev @openzeppelin/contracts`
+
+## Using Pinata
+
+References:
+
+- <https://www.pinata.cloud/>
+- <https://app.pinata.cloud/keys>
+- <https://docs.pinata.cloud/sdks>
+  - <https://docs.pinata.cloud/pinata-api/pinning/pin-file-or-directory>
+  - <https://docs.pinata.cloud/pinata-api/pinning/pin-json>
+
+Install SDK: `yarn add --dev @pinata/sdk`
