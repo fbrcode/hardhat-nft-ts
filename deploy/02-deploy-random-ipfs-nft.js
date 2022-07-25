@@ -39,7 +39,7 @@ async function deployRandomIpfsNft({ getNamedAccounts, deployments }) {
   // get the IPFS hashes of our images
   let tokenUris;
   if (process.env.UPLOAD_TO_PINATA == 'true') {
-    tokenUris = await handleTokenUris();
+    tokenUris = await handleTokenUris(log);
   }
   // options:
   // 1. with our own IPFS node
@@ -94,22 +94,24 @@ async function deployRandomIpfsNft({ getNamedAccounts, deployments }) {
   log('----------------------------------------------------');
 }
 
-async function handleTokenUris() {
+async function handleTokenUris(log) {
   const tokenUris = [];
   // 1. store the image in IPFS
   // 2. store the metadata in IPFS
-  const { responses: imageUploadResponses, files } = await storeImages(imagesLocation);
+  const imageUploadResponses = await storeImages(imagesLocation);
+  // log(`Image responses: ${JSON.stringify(imageUploadResponses, null, 2)}`);
   for (imageUploadResponseIndex in imageUploadResponses) {
     let tokenUriMetadata = { ...metadataTemplate };
-    tokenUriMetadata.name = files[imageUploadResponseIndex].replace('.png', '');
+    tokenUriMetadata.name = imageUploadResponses[imageUploadResponseIndex].fileName.replace('.png', '');
     tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name} puppy!`;
     tokenUriMetadata.image = `ipfs://${imageUploadResponses[imageUploadResponseIndex].IpfsHash}`;
-    console.log(`Uploading metadata for ${tokenUriMetadata.name}...`);
+    // log(`Template ready metadata: ${JSON.stringify(tokenUriMetadata, null, 2)}`);
+    log(`Uploading metadata for ${tokenUriMetadata.name}...`);
     // store the JSON to pinata / IPFS
     const metadataUploadResponse = await storeTokenUriMetadata(tokenUriMetadata);
     tokenUris.push(`ipfs://${metadataUploadResponse.IpfsHash}`);
   }
-  console.log(`Token URIs Uploaded! They are:\n${JSON.stringify(tokenUris, null, 2)}`);
+  log(`Token URIs Uploaded! They are:\n${JSON.stringify(tokenUris, null, 2)}`);
   return tokenUris;
 }
 
