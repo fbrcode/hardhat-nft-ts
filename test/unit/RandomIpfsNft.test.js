@@ -13,6 +13,8 @@ network.live
         await deployments.fixture(['mocks', 'random']);
         randomIpfsNftContract = await ethers.getContract('RandomIpfsNft');
         randomIpfsNft = randomIpfsNftContract.connect(deployer);
+        vrfCoordinatorV2MockContract = await ethers.getContract('VRFCoordinatorV2Mock');
+        vrfCoordinatorV2Mock = vrfCoordinatorV2MockContract.connect(deployer);
         mintFee = await randomIpfsNft.getMintFee();
       });
 
@@ -62,13 +64,35 @@ network.live
         });
       });
 
-      /*
-  describe('fulfillRandomWords', () => {
-    it('', async () => {});
-    // it('', async () => {});
-    // it('', async () => {});
-  });
-  */
+      describe('fulfillRandomWords', () => {
+        it('mints NFT after random number is returned', async () => {
+          await new Promise(async (resolve, reject) => {
+            randomIpfsNft.once('NftMinted', async () => {
+              try {
+                const tokenUri = await randomIpfsNft.tokenURI('0');
+                const tokenCounter = await randomIpfsNft.getTokenCounter();
+                assert.equal(tokenUri.toString().includes('ipfs://'), true);
+                assert.equal(tokenCounter.toString(), '1');
+                resolve();
+              } catch (e) {
+                console.log('\t ❌ ' + e);
+                reject(e);
+              }
+            });
+            try {
+              const requestNftResponse = await randomIpfsNft.requestNft({ value: mintFee });
+              const requestNftReceipt = await requestNftResponse.wait(1);
+              await vrfCoordinatorV2Mock.fulfillRandomWords(
+                requestNftReceipt.events[1].args.requestId,
+                randomIpfsNft.address
+              );
+            } catch (e) {
+              console.log('\t ❌ ' + e);
+              reject(e);
+            }
+          });
+        });
+      });
 
       describe('withdraw', () => {
         it('reverts if not owner tries to withdraw', async () => {
@@ -76,23 +100,38 @@ network.live
           await expect(randomIpfsNft.withdraw({ from: user2 })).to.be.reverted;
         });
 
-        /*
-    it('withdraw funds to owner', async () => {
-      const deployerBeforeBalance = await deployer.getBalance();
-      console.log(`\t🔍 Deployer before balance: ${deployerBeforeBalance}`);
-      // const contractBalance = await randomIpfsNft.getBalance();
-      console.log(`\t🔍 Mint fee: ${mintFee}`);
-      const txResponse = await randomIpfsNft.withdraw();
-      await txResponse.wait(1);
-      const deployerAfterBalance = await deployer.getBalance();
-      console.log(`\t🔍 Deployer after balance: ${deployerAfterBalance}`);
-      const diff = (deployerBeforeBalance - deployerAfterBalance).toString();
-      console.log(`\t🔍 Diff: ${diff}`);
-      // assert.equal(deployerAfterBalance.toString(), deployerBeforeBalance.add(mintFee).toString());
-      assert(true);
-    });
-    */
-        // it('', async () => {});
+        it('withdraw funds to NFT minter', async () => {
+          let minterStartingBalance;
+          await new Promise(async (resolve, reject) => {
+            randomIpfsNft.once('NftMinted', async () => {
+              try {
+                const txResponse = await randomIpfsNft.withdraw();
+                const txReceipt = await txResponse.wait(1);
+                const minterEndingBalance = await deployer.getBalance();
+                // console.log(`\t staring    >> balance 💰 ${minterStartingBalance.toString()}`);
+                // console.log(`\t ending     >> balance 💰 ${minterEndingBalance.toString()}`);
+                // console.log(`\t difference >> balance 💰 ${minterEndingBalance.sub(minterStartingBalance).toString()}`);
+                assert(minterEndingBalance > minterStartingBalance);
+                resolve();
+              } catch (e) {
+                console.log('\t ❌ ' + e);
+                reject(e);
+              }
+            });
+            try {
+              const requestNftResponse = await randomIpfsNft.requestNft({ value: mintFee });
+              const requestNftReceipt = await requestNftResponse.wait(1);
+              minterStartingBalance = await deployer.getBalance();
+              await vrfCoordinatorV2Mock.fulfillRandomWords(
+                requestNftReceipt.events[1].args.requestId,
+                randomIpfsNft.address
+              );
+            } catch (e) {
+              console.log('\t ❌ ' + e);
+              reject(e);
+            }
+          });
+        });
       });
 
       describe('getBreedFromModdedRange', () => {
@@ -116,8 +155,5 @@ network.live
           const breedFromModdedRange = await randomIpfsNft.getBreedFromModdedRange(88);
           assert(breedFromModdedRange.toString(), '2');
         });
-
-        // it('', async () => {});
-        // it('', async () => {});
       });
     });
