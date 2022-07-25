@@ -99,7 +99,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     emit NftMinted(dogBreed, dogOwner);
   }
 
-  function widthdraw() public onlyOwner {
+  function withdraw() public onlyOwner {
     uint256 amount = address(this).balance;
     (bool success, ) = payable(msg.sender).call{value: amount}('');
     if (!success) {
@@ -133,5 +133,9 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
 
   function getTokenCounter() public view returns (uint256) {
     return s_tokenCounter;
+  }
+
+  function getDogOwner(uint256 requestId) public view returns (address) {
+    return s_requestIdToSender[requestId];
   }
 }
